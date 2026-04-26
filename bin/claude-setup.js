@@ -11,11 +11,9 @@ program
   .name('claude-setup')
   .description('Interactive setup wizard for Claude Code')
   .version(pkg.version)
-  .option('-y, --yes', 'install recommended MCPs without prompting')
-  .option('--minimal', 'install core MCPs only, skip optional')
   .action(async () => {
-    const { runWizard } = await import('../src/wizard.js');
-    await runWizard(program.opts());
+    const { runMenu } = await import('../src/menu.js');
+    await runMenu();
   });
 
 program

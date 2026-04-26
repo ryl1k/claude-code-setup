@@ -1,8 +1,8 @@
 import chalk from 'chalk';
-import { input, password } from '@inquirer/prompts';
 import ora from 'ora';
 import { ALL_MCPS } from '../registry.js';
 import { readSettings, writeSettings, isInstalled, addMcpToSettings, SETTINGS_PATH } from '../settings.js';
+import { promptEnv } from '../utils.js';
 
 export async function addMcpCommand(mcpId) {
   const mcp = ALL_MCPS.find(m => m.id === mcpId);
@@ -20,20 +20,7 @@ export async function addMcpCommand(mcpId) {
     return;
   }
 
-  const env = {};
-
-  if (mcp.env) {
-    console.log();
-    console.log(chalk.bold(`  ${mcp.name} — credentials needed:`));
-    for (const envVar of mcp.env) {
-      const promptFn = envVar.sensitive ? password : input;
-      const value = await promptFn({
-        message: `    ${envVar.name}${envVar.hint ? chalk.dim(` (${envVar.hint})`) : ''}:`,
-        validate: v => (v && v.trim()) ? true : 'Required',
-      });
-      env[envVar.name] = value.trim();
-    }
-  }
+  const env = await promptEnv(mcp);
 
   const spinner = ora({ text: `  Adding ${mcp.name}...`, color: 'cyan' }).start();
 
