@@ -1,0 +1,35 @@
+{
+  "name": "claude-code-setup",
+  "version": "1.0.0",
+  "description": "Interactive setup wizard for Claude Code — MCPs, settings, and more",
+  "type": "module",
+  "bin": {
+    "claude-setup": "./bin/claude-setup.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "scripts": {
+    "start": "node bin/claude-setup.js",
+    "start:status": "node bin/claude-setup.js status"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^7.0.0",
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "ora": "^8.1.0"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "mcp",
+    "setup",
+    "developer-tools",
+    "ai"
+  ],
+  "license": "MIT"
+}
