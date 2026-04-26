@@ -5,22 +5,23 @@ import chalk from 'chalk';
 import { checkbox, select, input, password, confirm } from '@inquirer/prompts';
 import ora from 'ora';
 import { CORE_MCPS, OPTIONAL_MCPS } from './registry.js';
-import { readSettings, writeSettings, isInstalled, getInstalledMcpIds, SETTINGS_PATH } from './settings.js';
+import {
+  readSettings,
+  writeSettings,
+  isInstalled,
+  addMcpToSettings,
+  SETTINGS_PATH,
+} from './settings.js';
 import { banner, section, closingLine, mcpRow, successLine, infoLine } from './ui.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const { version } = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'));
 
 export async function runWizard({ yes = false, minimal = false } = {}) {
-  const settings = readSettings();
+  let settings = readSettings();
 
   banner(version);
   console.log(chalk.dim(`  Config: ${SETTINGS_PATH}`));
-
-  const alreadyInstalled = getInstalledMcpIds(settings);
-  if (alreadyInstalled.length > 0) {
-    console.log(chalk.dim(`  Already installed: ${alreadyInstalled.join(', ')}`));
-  }
 
   const toInstall = [];
 
@@ -28,7 +29,7 @@ export async function runWizard({ yes = false, minimal = false } = {}) {
   section('CORE MCPs  (always installed)');
 
   for (const mcp of CORE_MCPS) {
-    if (isInstalled(settings, mcp.id)) {
+    if (isInstalled(settings, mcp)) {
       mcpRow(mcp.name, mcp.description, 'already installed');
     } else {
       mcpRow(mcp.name, mcp.description);
@@ -38,7 +39,7 @@ export async function runWizard({ yes = false, minimal = false } = {}) {
 
   if (!minimal) {
     // ── Optional MCPs — checkbox ──────────────────────────────────────
-    const newOptional = OPTIONAL_MCPS.filter(m => !isInstalled(settings, m.id));
+    const newOptional = OPTIONAL_MCPS.filter(m => !isInstalled(settings, m));
 
     if (newOptional.length > 0) {
       section('OPTIONAL MCPs');
@@ -132,15 +133,12 @@ export async function runWizard({ yes = false, minimal = false } = {}) {
   // ── Write ──────────────────────────────────────────────────────────
   section('Installing');
 
-  if (toInstall.length === 0 && !settings.model) {
+  if (toInstall.length === 0) {
     infoLine('Nothing new to install.');
   } else {
     for (const { mcp, env } of toInstall) {
       const spinner = ora({ text: `  ${mcp.name}`, color: 'cyan' }).start();
-
-      if (!settings.mcpServers) settings.mcpServers = {};
-      settings.mcpServers[mcp.id] = buildEntry(mcp, env);
-
+      settings = addMcpToSettings(settings, mcp, env);
       await delay(60);
       spinner.succeed(
         `  ${chalk.white(mcp.name.padEnd(22))}${chalk.dim(mcp.description)}`,
@@ -156,12 +154,6 @@ export async function runWizard({ yes = false, minimal = false } = {}) {
   infoLine('Restart Claude Code to activate MCPs.');
   console.log();
   closingLine();
-}
-
-function buildEntry(mcp, env) {
-  const entry = { command: mcp.command, args: mcp.args };
-  if (env && Object.keys(env).length > 0) entry.env = env;
-  return entry;
 }
 
 const delay = ms => new Promise(r => setTimeout(r, ms));

@@ -9,6 +9,7 @@ export async function exportProfile(outputPath = 'claude-profile.json') {
   const profile = {
     version: 1,
     exported: new Date().toISOString(),
+    enabledPlugins: settings.enabledPlugins || {},
     mcpServers: settings.mcpServers || {},
     model: settings.model,
     theme: settings.theme,

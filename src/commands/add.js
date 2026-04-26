@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { input, password } from '@inquirer/prompts';
 import ora from 'ora';
 import { ALL_MCPS } from '../registry.js';
-import { readSettings, writeSettings, isInstalled, SETTINGS_PATH } from '../settings.js';
+import { readSettings, writeSettings, isInstalled, addMcpToSettings, SETTINGS_PATH } from '../settings.js';
 
 export async function addMcpCommand(mcpId) {
   const mcp = ALL_MCPS.find(m => m.id === mcpId);
@@ -13,9 +13,9 @@ export async function addMcpCommand(mcpId) {
     process.exit(1);
   }
 
-  const settings = readSettings();
+  let settings = readSettings();
 
-  if (isInstalled(settings, mcpId)) {
+  if (isInstalled(settings, mcp)) {
     console.log(chalk.yellow(`\n  ${mcp.name} is already installed.\n`));
     return;
   }
@@ -37,14 +37,9 @@ export async function addMcpCommand(mcpId) {
 
   const spinner = ora({ text: `  Adding ${mcp.name}...`, color: 'cyan' }).start();
 
-  if (!settings.mcpServers) settings.mcpServers = {};
-  settings.mcpServers[mcpId] = {
-    command: mcp.command,
-    args: mcp.args,
-    ...(Object.keys(env).length > 0 ? { env } : {}),
-  };
-
+  settings = addMcpToSettings(settings, mcp, env);
   writeSettings(settings);
+
   spinner.succeed(chalk.green(`  ${mcp.name} added.`));
   console.log(chalk.dim(`  Saved to ${SETTINGS_PATH}`));
   console.log(chalk.dim('  Restart Claude Code to activate.\n'));

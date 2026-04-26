@@ -19,12 +19,17 @@ export async function applyProfile(profilePath) {
   }
 
   const settings = readSettings();
-  const mcpServers = JSON.parse(JSON.stringify(profile.mcpServers || {}));
 
   console.log();
   console.log(chalk.bold('Applying profile...'));
 
-  // Fill in any placeholder values interactively
+  // Plugins — just merge, no credentials needed
+  if (profile.enabledPlugins) {
+    settings.enabledPlugins = { ...settings.enabledPlugins, ...profile.enabledPlugins };
+  }
+
+  // Servers — fill in placeholder credentials interactively
+  const mcpServers = JSON.parse(JSON.stringify(profile.mcpServers || {}));
   for (const [id, entry] of Object.entries(mcpServers)) {
     if (!entry.env) continue;
     const def = ALL_MCPS.find(m => m.id === id);
@@ -40,8 +45,8 @@ export async function applyProfile(profilePath) {
       entry.env[key] = real.trim();
     }
   }
-
   settings.mcpServers = { ...settings.mcpServers, ...mcpServers };
+
   if (profile.model) settings.model = profile.model;
   if (profile.theme) settings.theme = profile.theme;
 
