@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node bin/claude-setup.js status)"
+      "Bash(node bin/claude-setup.js status)",
+      "WebSearch"
     ]
   }
 }
